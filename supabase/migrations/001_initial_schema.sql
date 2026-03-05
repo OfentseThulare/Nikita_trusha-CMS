@@ -11,6 +11,13 @@ CREATE TABLE public.admins (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+
+-- Authenticated users can check their own admin status
+CREATE POLICY "Authenticated can read own admin record"
+  ON public.admins FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
 -- Insert admin user
 INSERT INTO public.admins (user_id) VALUES ('7c9bd88e-9f91-42c9-9364-d21098777022');
 
