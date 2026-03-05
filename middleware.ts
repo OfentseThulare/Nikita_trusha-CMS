@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // --- CORS for public API routes ---
   if (request.nextUrl.pathname.startsWith('/api/v1/')) {
     if (request.method === 'OPTIONS') {
@@ -23,28 +24,21 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // --- Auth guard for admin routes ---
-  if (!request.nextUrl.pathname.startsWith('/admin')) {
-    return NextResponse.next()
-  }
-
-  // Check for Supabase auth cookie (handles both regular and chunked cookies)
-  // Regular: sb-<ref>-auth-token
-  // Chunked: sb-<ref>-auth-token.0, sb-<ref>-auth-token.1, etc.
-  const hasAuthCookie = request.cookies.getAll().some(
-    (c) => c.name.startsWith('sb-') && c.name.includes('-auth-token')
-  )
-
-  if (!hasAuthCookie) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // Cookie exists — let the admin layout do the real auth check
-  return NextResponse.next()
+  // --- Supabase session refresh + admin auth guard ---
+  return await updateSession(request)
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/v1/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/api/v1/:path*',
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico (favicon)
+     * - public files (images, etc.)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
