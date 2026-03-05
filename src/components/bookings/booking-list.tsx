@@ -10,10 +10,10 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { BookingStatusBadge } from './booking-status-badge'
-import { confirmBooking, cancelBooking, completeBooking } from '@/lib/actions/bookings'
+import { confirmBooking, cancelBooking, completeBooking, deleteBooking } from '@/lib/actions/bookings'
 import { formatDate, formatTime } from '@/lib/utils/dates'
 import type { Booking } from '@/types'
-import { CheckCircle, XCircle, CheckCheck, ChevronDown } from 'lucide-react'
+import { CheckCircle, XCircle, CheckCheck, ChevronDown, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const STATUS_TABS = [
@@ -34,16 +34,18 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
     ? bookings
     : bookings.filter(b => b.status === statusFilter)
 
-  async function handleAction(action: 'confirm' | 'cancel' | 'complete', id: string) {
+  async function handleAction(action: 'confirm' | 'cancel' | 'complete' | 'delete', id: string) {
+    if (action === 'delete' && !window.confirm('Permanently delete this booking? This cannot be undone.')) return
     let result
     switch (action) {
       case 'confirm': result = await confirmBooking(id); break
       case 'cancel': result = await cancelBooking(id); break
       case 'complete': result = await completeBooking(id); break
+      case 'delete': result = await deleteBooking(id); break
     }
     if (result?.error) toast.error(result.error)
     else {
-      const messages = { confirm: 'Booking confirmed!', cancel: 'Booking cancelled', complete: 'Booking marked complete' }
+      const messages = { confirm: 'Booking confirmed!', cancel: 'Booking cancelled', complete: 'Booking marked complete', delete: 'Booking deleted' }
       toast.success(messages[action])
       startTransition(() => router.refresh())
     }
@@ -185,6 +187,15 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                           </Button>
                         </>
                       )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        onClick={() => handleAction('delete', booking.id)}
+                      >
+                        <Trash2 className="mr-1.5 h-3 w-3" />
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </CollapsibleContent>

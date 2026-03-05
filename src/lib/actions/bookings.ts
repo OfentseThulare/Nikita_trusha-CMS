@@ -60,3 +60,17 @@ export async function completeBooking(id: string) {
   revalidatePath('/admin/bookings')
   return { success: true }
 }
+
+export async function deleteBooking(id: string) {
+  const { supabase } = await requireAdmin()
+
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/bookings')
+  return { success: true }
+}
