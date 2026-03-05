@@ -197,14 +197,8 @@ CREATE TABLE public.bookings (
   booking_date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
-  -- Range column for overlap prevention
-  duration TSTZRANGE GENERATED ALWAYS AS (
-    tstzrange(
-      (booking_date || ' ' || start_time)::timestamptz,
-      (booking_date || ' ' || end_time)::timestamptz,
-      '[)'
-    )
-  ) STORED,
+  -- Range column for overlap prevention (populated by trigger)
+  duration TSRANGE,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
   notes TEXT,                             -- Client message
@@ -218,6 +212,23 @@ CREATE TABLE public.bookings (
     EXCLUDE USING GIST (duration WITH &&)
     WHERE (status NOT IN ('cancelled'))
 );
+
+-- Trigger to auto-populate the duration range from booking_date + start/end_time
+CREATE OR REPLACE FUNCTION public.set_booking_duration()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.duration := tsrange(
+    (NEW.booking_date + NEW.start_time)::timestamp,
+    (NEW.booking_date + NEW.end_time)::timestamp,
+    '[)'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_set_booking_duration
+  BEFORE INSERT OR UPDATE ON public.bookings
+  FOR EACH ROW EXECUTE FUNCTION public.set_booking_duration();
 
 CREATE TRIGGER on_bookings_updated
   BEFORE UPDATE ON public.bookings
