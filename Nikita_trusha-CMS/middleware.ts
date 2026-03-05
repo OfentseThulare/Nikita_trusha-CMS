@@ -1,5 +1,6 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+
+export const runtime = 'edge'
 
 export async function middleware(request: NextRequest) {
   try {
@@ -30,37 +31,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    // Check for Supabase auth cookie — if no cookie, redirect to login
+    const hasAuthCookie = request.cookies.getAll().some(
+      (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+    )
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase env vars in middleware')
-      return NextResponse.next()
-    }
-
-    let supabaseResponse = NextResponse.next({ request })
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    })
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
+    if (!hasAuthCookie) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
     }
 
-    return supabaseResponse
+    return NextResponse.next()
   } catch (e) {
     console.error('Middleware error:', e)
     return NextResponse.next()
