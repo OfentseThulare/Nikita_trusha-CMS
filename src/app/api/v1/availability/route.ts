@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isGoogleConnected, checkBusyTimes } from '@/lib/google/calendar'
 import type { TimeSlot } from '@/types'
 
 export async function GET(request: Request) {
@@ -65,24 +64,11 @@ export async function GET(request: Request) {
     .eq('booking_date', date)
     .not('status', 'eq', 'cancelled')
 
-  // 5. Get Google busy times if connected
-  let busyTimes: Array<{ start: string; end: string }> = []
-  const googleConnected = await isGoogleConnected()
-  if (googleConnected) {
-    busyTimes = await checkBusyTimes(date)
-  }
-
-  // 6. Compute available slots
-  const blockedRanges = [
-    ...(bookings ?? []).map(b => ({
-      start: timeToMinutes(b.start_time),
-      end: timeToMinutes(b.end_time) + breakBetween,
-    })),
-    ...busyTimes.map(b => ({
-      start: timeToMinutes(b.start),
-      end: timeToMinutes(b.end) + breakBetween,
-    })),
-  ]
+  // 5. Compute available slots
+  const blockedRanges = (bookings ?? []).map(b => ({
+    start: timeToMinutes(b.start_time),
+    end: timeToMinutes(b.end_time) + breakBetween,
+  }))
 
   const slots: TimeSlot[] = []
   let current = timeToMinutes(dayStart)

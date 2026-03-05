@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button'
 import { PostStatusBadge } from '@/components/posts/post-status-badge'
 import { BookingStatusBadge } from '@/components/bookings/booking-status-badge'
 import { formatDate, formatTime } from '@/lib/utils/dates'
-import { isGoogleConnected } from '@/lib/google/calendar'
-import { FileText, BookOpen, Calendar, Plus, CheckCircle, XCircle } from 'lucide-react'
+import { FileText, BookOpen, Calendar, Plus } from 'lucide-react'
 import type { Post, Booking } from '@/types'
 
 export default async function DashboardPage() {
@@ -39,8 +38,6 @@ export default async function DashboardPage() {
       .select('id', { count: 'exact', head: true })
       .gte('booking_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]),
   ])
-
-  const googleConnected = await isGoogleConnected()
 
   return (
     <div className="space-y-6">
@@ -88,20 +85,8 @@ export default async function DashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Google Calendar</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {googleConnected ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-700">Connected</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-500">Not connected</span>
-                    </>
-                  )}
-                </div>
+                <p className="text-sm text-gray-500">Upcoming Bookings</p>
+                <p className="text-2xl font-bold text-gray-900 mt-0.5">{(upcomingBookings ?? []).length}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8F0FB]">
                 <Calendar className="h-5 w-5 text-[#0033A0]" />
@@ -184,20 +169,6 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {!googleConnected && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
-          <Calendar className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-amber-800">Google Calendar not connected</p>
-            <p className="text-sm text-amber-700 mt-0.5">
-              Connect your Google account to auto-generate Meet links when you confirm bookings.{' '}
-              <Link href="/admin/calendar" className="font-medium underline">
-                Set up now
-              </Link>
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

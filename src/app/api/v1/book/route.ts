@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { bookingSchema } from '@/lib/validators/booking'
-import { isGoogleConnected, createCalendarEvent } from '@/lib/google/calendar'
 
 export async function POST(request: Request) {
   let body: unknown
@@ -65,33 +64,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Try to create Google Calendar event if connected
-  let meetLink: string | null = null
-  const googleConnected = await isGoogleConnected()
-  if (googleConnected) {
-    try {
-      const eventResult = await createCalendarEvent({
-        clientName: data.name,
-        clientEmail: data.email,
-        date: data.date,
-        startTime: data.start_time,
-        endTime: data.end_time,
-        notes: data.notes ?? null,
-      })
-      meetLink = eventResult.meetLink
-
-      await supabase
-        .from('bookings')
-        .update({ meet_link: meetLink, google_event_id: eventResult.eventId })
-        .eq('id', booking.id)
-    } catch {
-      // Non-fatal: booking still created without Meet link
-    }
-  }
-
   return NextResponse.json({
     booking_id: booking.id,
     status: booking.status,
-    meet_link: meetLink,
   })
 }

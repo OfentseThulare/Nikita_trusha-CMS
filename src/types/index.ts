@@ -67,19 +67,6 @@ export interface Booking {
   end_time: string
   status: BookingStatus
   notes: string | null
-  meet_link: string | null
-  google_event_id: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface GoogleToken {
-  id: string
-  user_id: string
-  access_token: string
-  refresh_token: string
-  token_expiry: string
-  scopes: string[] | null
   created_at: string
   updated_at: string
 }

@@ -13,7 +13,7 @@ import { BookingStatusBadge } from './booking-status-badge'
 import { confirmBooking, cancelBooking, completeBooking } from '@/lib/actions/bookings'
 import { formatDate, formatTime } from '@/lib/utils/dates'
 import type { Booking } from '@/types'
-import { CheckCircle, XCircle, CheckCheck, ExternalLink, ChevronDown } from 'lucide-react'
+import { CheckCircle, XCircle, CheckCheck, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const STATUS_TABS = [
@@ -125,21 +125,6 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Client notes</p>
                         <p className="text-sm text-gray-700 bg-white rounded p-2 border border-gray-100">{booking.notes}</p>
-                      </div>
-                    )}
-
-                    {booking.meet_link && (
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-gray-500">Meet link:</p>
-                        <a
-                          href={booking.meet_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-[#0033A0] hover:underline flex items-center gap-1"
-                        >
-                          {booking.meet_link}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
                       </div>
                     )}
 

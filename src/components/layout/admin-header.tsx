@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Menu, LogOut, Settings, LayoutDashboard, FileText, Image, Calendar, BookOpen, Clock } from 'lucide-react'
+import { Menu, LogOut, Settings, LayoutDashboard, FileText, Image, BookOpen, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -25,7 +25,6 @@ const navItems = [
   { href: '/admin/media', label: 'Media Library', icon: Image },
   { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
   { href: '/admin/availability', label: 'Availability', icon: Clock },
-  { href: '/admin/calendar', label: 'Google Calendar', icon: Calendar },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 

@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   FileText,
   Image,
-  Calendar,
   BookOpen,
   Clock,
   Settings,
@@ -19,7 +18,6 @@ const navItems = [
   { href: '/admin/media', label: 'Media Library', icon: Image },
   { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
   { href: '/admin/availability', label: 'Availability', icon: Clock },
-  { href: '/admin/calendar', label: 'Google Calendar', icon: Calendar },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
