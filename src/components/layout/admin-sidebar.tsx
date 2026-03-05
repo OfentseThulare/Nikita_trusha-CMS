@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   FileText,
-  Image,
   BookOpen,
   Clock,
   Settings,
@@ -15,7 +14,6 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/posts', label: 'Blog Posts', icon: FileText },
-  { href: '/admin/media', label: 'Media Library', icon: Image },
   { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
   { href: '/admin/availability', label: 'Availability', icon: Clock },
   { href: '/admin/settings', label: 'Settings', icon: Settings },

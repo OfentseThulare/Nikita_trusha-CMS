@@ -10,7 +10,6 @@ import TextAlign from '@tiptap/extension-text-align'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
 import { EditorToolbar } from './toolbar'
-import { MediaPickerDialog } from '@/components/media/media-picker-dialog'
 import { useState, useEffect } from 'react'
 
 const lowlight = createLowlight(common)
@@ -22,7 +21,7 @@ interface TipTapEditorProps {
 }
 
 export function TipTapEditor({ content, onChange, placeholder = 'Start writing your article...' }: TipTapEditorProps) {
-  const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
+  const [, setMediaPickerOpen] = useState(false)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -64,24 +63,21 @@ export function TipTapEditor({ content, onChange, placeholder = 'Start writing y
     }
   }, [editor, content])
 
-  function handleImageSelect(url: string) {
-    editor?.chain().focus().setImage({ src: url }).run()
-    setMediaPickerOpen(false)
+  function handleImageInsert() {
+    const url = window.prompt('Enter image URL:')
+    if (url) {
+      editor?.chain().focus().setImage({ src: url }).run()
+    }
   }
 
   if (!editor) return null
 
   return (
     <div className="flex flex-col rounded-md border border-gray-200 bg-white overflow-hidden">
-      <EditorToolbar editor={editor} onImageInsert={() => setMediaPickerOpen(true)} />
+      <EditorToolbar editor={editor} onImageInsert={handleImageInsert} />
       <EditorContent
         editor={editor}
         className="prose prose-sm max-w-none flex-1 px-4 py-3 focus-within:outline-none min-h-[400px] [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child]:before:text-gray-400 [&_.ProseMirror_p.is-editor-empty:first-child]:before:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child]:before:float-left [&_.ProseMirror_p.is-editor-empty:first-child]:before:h-0"
-      />
-      <MediaPickerDialog
-        open={mediaPickerOpen}
-        onClose={() => setMediaPickerOpen(false)}
-        onSelect={handleImageSelect}
       />
     </div>
   )
