@@ -1,7 +1,6 @@
 -- ============================================================
 -- EXTENSIONS
 -- ============================================================
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 -- ============================================================
@@ -12,8 +11,8 @@ CREATE TABLE public.admins (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- After Nikita signs up, insert her UUID:
--- INSERT INTO public.admins (user_id) VALUES ('her-uuid-here');
+-- Insert admin user
+INSERT INTO public.admins (user_id) VALUES ('7c9bd88e-9f91-42c9-9364-d21098777022');
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean AS $$
@@ -29,7 +28,7 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '';
 -- CATEGORIES
 -- ============================================================
 CREATE TABLE public.categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL UNIQUE,
   slug TEXT NOT NULL UNIQUE,
   description TEXT,
@@ -58,7 +57,7 @@ INSERT INTO public.categories (name, slug, description) VALUES
 -- POSTS (Blog)
 -- ============================================================
 CREATE TABLE public.posts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   content JSONB,                         -- TipTap JSON content
@@ -110,7 +109,7 @@ CREATE POLICY "Admin full CRUD on posts"
 -- MEDIA
 -- ============================================================
 CREATE TABLE public.media (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   filename TEXT NOT NULL,
   storage_path TEXT NOT NULL,            -- Path within Supabase Storage bucket
   public_url TEXT NOT NULL,
@@ -134,7 +133,7 @@ CREATE POLICY "Admin manages media"
 -- AVAILABILITY (Calendar)
 -- ============================================================
 CREATE TABLE public.availability_slots (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
       -- 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   start_time TIME NOT NULL,
@@ -167,7 +166,7 @@ INSERT INTO public.availability_slots (day_of_week, start_time, end_time) VALUES
 -- DATE OVERRIDES (block specific dates)
 -- ============================================================
 CREATE TABLE public.date_overrides (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   date DATE NOT NULL UNIQUE,
   is_available BOOLEAN DEFAULT false,     -- false = blocked day
   start_time TIME,                        -- Custom hours (if is_available = true)
@@ -190,7 +189,7 @@ CREATE POLICY "Admin manages date overrides"
 -- BOOKINGS
 -- ============================================================
 CREATE TABLE public.bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_name TEXT NOT NULL,
   client_email TEXT NOT NULL,
   client_phone TEXT,
@@ -202,8 +201,6 @@ CREATE TABLE public.bookings (
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
   notes TEXT,                             -- Client message
-  meet_link TEXT,                         -- Google Meet URL (auto-generated)
-  google_event_id TEXT,                   -- Google Calendar event ID
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
 
@@ -252,32 +249,6 @@ CREATE POLICY "Public can read bookings"
 -- Admin has full access
 CREATE POLICY "Admin manages bookings"
   ON public.bookings FOR ALL TO authenticated
-  USING ((SELECT public.is_admin()))
-  WITH CHECK ((SELECT public.is_admin()));
-
--- ============================================================
--- GOOGLE TOKENS (store Nikita's OAuth tokens securely)
--- ============================================================
-CREATE TABLE public.google_tokens (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
-  access_token TEXT NOT NULL,
-  refresh_token TEXT NOT NULL,
-  token_expiry TIMESTAMPTZ NOT NULL,
-  scopes TEXT[],
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TRIGGER on_google_tokens_updated
-  BEFORE UPDATE ON public.google_tokens
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-
-ALTER TABLE public.google_tokens ENABLE ROW LEVEL SECURITY;
-
--- Only admin can access tokens
-CREATE POLICY "Admin manages google tokens"
-  ON public.google_tokens FOR ALL TO authenticated
   USING ((SELECT public.is_admin()))
   WITH CHECK ((SELECT public.is_admin()));
 
