@@ -66,6 +66,7 @@ export interface Booking {
   start_time: string
   end_time: string
   status: BookingStatus
+  inquiry_type: string | null
   notes: string | null
   created_at: string
   updated_at: string

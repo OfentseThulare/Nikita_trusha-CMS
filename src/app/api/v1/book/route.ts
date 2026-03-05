@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { bookingSchema } from '@/lib/validators/booking'
+import { sendProspectConfirmation, sendNikitaNotification } from '@/lib/email/send'
 
 export async function POST(request: Request) {
   let body: unknown
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
       booking_date: data.date,
       start_time: data.start_time,
       end_time: data.end_time,
+      inquiry_type: data.inquiry_type ?? null,
       notes: data.notes ?? null,
       status: 'pending',
     })
@@ -63,6 +65,29 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Fire-and-forget email notifications — don't fail the booking if emails fail
+  const emailData = {
+    client_name: data.name,
+    client_email: data.email,
+    client_phone: data.phone ?? null,
+    booking_date: data.date,
+    start_time: data.start_time,
+    end_time: data.end_time,
+    inquiry_type: data.inquiry_type ?? null,
+    notes: data.notes ?? null,
+  }
+
+  Promise.allSettled([
+    sendProspectConfirmation(emailData),
+    sendNikitaNotification(emailData),
+  ]).then(results => {
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        console.error(`Email ${i === 0 ? 'prospect' : 'nikita'} failed:`, result.reason)
+      }
+    })
+  })
 
   return NextResponse.json({
     booking_id: booking.id,

@@ -87,7 +87,14 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                       <ChevronDown className={`h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0 transition-transform ${expandedId === booking.id ? 'rotate-180' : ''}`} />
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 text-sm">{booking.client_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{booking.client_email}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-gray-500 truncate">{booking.client_email}</p>
+                          {booking.inquiry_type && (
+                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 whitespace-nowrap">
+                              {booking.inquiry_type}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 ml-3">
@@ -120,6 +127,13 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                         <p className="text-gray-900">{formatDate(booking.created_at)}</p>
                       </div>
                     </div>
+
+                    {booking.inquiry_type && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Inquiry type</p>
+                        <p className="text-sm text-gray-900 font-medium">{booking.inquiry_type}</p>
+                      </div>
+                    )}
 
                     {booking.notes && (
                       <div>
