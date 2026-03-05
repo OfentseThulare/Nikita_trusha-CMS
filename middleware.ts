@@ -1,14 +1,29 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
+function getAllowedOrigin(request: NextRequest): string {
+  const origin = request.headers.get('origin') || ''
+  const allowed = (process.env.ALLOWED_ORIGIN || '').split(',').map(o => o.trim())
+  // Also accept www/non-www variant automatically
+  const allVariants = new Set<string>()
+  for (const o of allowed) {
+    allVariants.add(o)
+    if (o.startsWith('https://www.')) allVariants.add(o.replace('https://www.', 'https://'))
+    else if (o.startsWith('https://')) allVariants.add(o.replace('https://', 'https://www.'))
+  }
+  if (allVariants.has(origin)) return origin
+  return allowed[0] || '*'
+}
+
 export async function middleware(request: NextRequest) {
   // --- CORS for public API routes ---
   if (request.nextUrl.pathname.startsWith('/api/v1/')) {
+    const corsOrigin = getAllowedOrigin(request)
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, {
         status: 200,
         headers: {
-          'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || '*',
+          'Access-Control-Allow-Origin': corsOrigin,
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
           'Access-Control-Max-Age': '86400',
@@ -20,7 +35,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const response = NextResponse.next()
-    response.headers.set('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*')
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin)
     return response
   }
 
