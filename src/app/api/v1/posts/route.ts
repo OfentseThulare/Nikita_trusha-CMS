@@ -10,15 +10,18 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient()
 
+  // Use !inner join when filtering by category so PostgREST filters parent rows
+  const categoryJoin = category ? 'category:categories!inner(id, name, slug)' : 'category:categories(id, name, slug)'
+
   let query = supabase
     .from('posts')
-    .select('id, title, slug, excerpt, cover_image_url, reading_time, published_at, category:categories(id, name, slug)', { count: 'exact' })
+    .select(`id, title, slug, excerpt, cover_image_url, reading_time, published_at, ${categoryJoin}`, { count: 'exact' })
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (category) {
-    query = query.eq('categories.slug', category)
+    query = query.eq('category.slug', category)
   }
 
   const { data: posts, count, error } = await query
