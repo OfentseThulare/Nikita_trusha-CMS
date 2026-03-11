@@ -81,8 +81,8 @@ export async function sendProspectConfirmation(booking: BookingEmailData) {
           </p>
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
           <p style="color: #9CA3AF; font-size: 12px; line-height: 1.5; text-align: center;">
-            Nikita Naidoo — Sanlam Financial Adviser<br/>
-            FSP 3780 | Sanlam Life Insurance Limited
+            Nikita Naidoo — Financial Adviser<br/>
+            FSP 3780 | Authorised Financial Services Provider
           </p>
         </div>
       </div>
