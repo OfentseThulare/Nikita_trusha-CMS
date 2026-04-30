@@ -39,30 +39,30 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  // --- Supabase session refresh + admin auth guard ---
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      db: { schema: process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || 'public' },
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
+  // --- Supabase session refresh + auth guard ---
   try {
+    let supabaseResponse = NextResponse.next({ request })
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        db: { schema: process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || 'public' },
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({ request })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -82,16 +82,17 @@ export async function middleware(request: NextRequest) {
     }
 
     return supabaseResponse
-  } catch {
-    if (request.nextUrl.pathname.startsWith('/admin')) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
+  } catch (err) {
+    console.error('[middleware] supabase auth failed:', err)
+    if (request.nextUrl.pathname.startsWith('/login')) {
+      return NextResponse.next()
     }
-    return NextResponse.next()
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login', '/api/v1/:path*'],
+  matcher: ['/', '/admin/:path*', '/login', '/api/v1/:path*'],
 }
