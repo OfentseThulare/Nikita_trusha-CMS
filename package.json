@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "node scripts/patch-edge-runtime.js && next build --webpack",
+    "postinstall": "node scripts/patch-edge-runtime.js",
     "start": "next start",
     "lint": "eslint"
   },
